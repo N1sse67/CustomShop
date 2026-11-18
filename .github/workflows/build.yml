@@ -4,12 +4,24 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: unzip -o CustomShop.zip
+      # Иконки для форм Bedrock: кладём в корень репозитория, чтобы они открывались по ссылке.
+      - name: Публикация иконок
+        run: |
+          cp icons/*.png .
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -f ./*.png
+          git commit -m "Иконки для форм Bedrock" || echo "Иконки уже на месте"
+          git push || echo "Не удалось отправить иконки"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -21,4 +33,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: CustomShop
-          path: build/libs/*.jar
+          path: build/libs/CustomShop.jar
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Последняя сборка
+          files: build/libs/CustomShop.jar
